@@ -155,3 +155,71 @@ results.difference.xtable <- xtable(results.difference)
 # Question 5: reverse engineer hypothesis test plot from lecture 20
 ################################################################################
 
+# part a: question 4, part(a)
+mu0 <- 0
+x <- dat.clean$closer_vals
+(xbar <- mean(x))
+(s <- sd(x))
+(n <- length(x))
+any(is.na(x)) # no missing data
+(t.stat <- (xbar - mu0)/(s/sqrt(n)))
+
+
+# For plotting the null distribution
+ggdat.t <- tibble(t=seq(-5,5,length.out=1000))|>
+  mutate(pdf.null = dt(t, df=n-1))
+# For plotting the observed point
+ggdat.obs <- tibble(t    = t.stat, 
+                    y    = 0) # to plot on x-axis
+
+# Resampling to approximate the sampling distribution 
+# on the data
+R <- 1000
+resamples <- tibble(t=numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x=x,
+                        size=n,
+                        replace=T)
+  resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
+              0, 
+              qt(0.975, df = n-1), 5,  # rejection region (right)
+              t.stat)                  # t-statistic observed
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+# Create Plot
+ggplot() +
+  # null distribution
+  geom_line(data=ggdat.t, 
+            aes(x=t, y=pdf.null))+
+  geom_hline(yintercept=0)+
+  # rejection regions
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  # plot p-value (not visible)
+  geom_ribbon(data=subset(ggdat.t, t>=t.stat), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="reg", alpha=0.25)+
+  # plot observation point
+  geom_point(data=ggdat.obs, aes(x=t, y=y), color="red")+
+  # Resampling Distribution
+  stat_density(data=resamples, 
+               aes(x=t),
+               geom="line", color="grey")+
+  # clean up aesthetics
+  theme_bw()+
+  scale_x_continuous("t",
+                     breaks = round(t.breaks,2),
+                     sec.axis = sec_axis(~.,
+                                         name = bquote(bar(x)),
+                                         breaks = t.breaks,
+                                         labels = round(xbar.breaks,2)))+
+  ylab("Density")+
+  ggtitle("T-Test for Mean Perceived Whiteness of Social Security Recipients",
+          subtitle=bquote(H[0]==3.5*";"~H[a]!=3.5))
