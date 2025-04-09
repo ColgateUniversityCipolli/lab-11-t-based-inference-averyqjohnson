@@ -41,6 +41,24 @@ conduct a power analysis. How many observations would the researchers
 need to detect a moderate-to-large effect ($d=0.65$) when using 
 $\alpha=0.05$ and default power (0.80) for a two-sided one sample 
 $t$ test.
+
+<<size="scriptsize">>=
+library(tidyverse)
+library(pwr)
+
+power.result <- power.t.test(delta=0.65, sig.level=0.05, power=0.80,
+                           type="one.sample", alternative="two.sided")
+(n.val <- power.result$n)
+@
+
+To determine the required number of observations to detect a moderate-to-large
+effect($d=0.65$) with a significance level of $\alpha=0.05$ and a power
+of $0.80$ for a two-sided one-sample t-test, we used the \texttt{pwr} package in 
+\texttt{R} \citep{pwr}.The power analysis indicates that approximately 21
+observations are needed to reliability detect this effect size. This sample size
+would give researchers an $80\%$ chance of correctly rejecting the null hypothesis
+when the effect is truly present.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % COLLECT DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,6 +68,23 @@ do to collect the data for Figure 2(g). Note that you only need the
 \texttt{closer\_vals} and \texttt{further\_vals}. Ensure to 
 \texttt{mutate()} the data to get a difference 
 (e.g., \texttt{closer\_vals - further\_vals}).
+
+<<size="scriptsize">>=
+dat <- read.csv("data.csv")
+
+dat.clean <- dat |>
+  mutate(difference = closer_vals - further_vals)
+(dat.clean)
+@
+
+To collect data for Figure 2(g), we downloaded the Excel file containing the
+source data. We extracted only the relevant columns, namely \texttt{closer\_vals}
+and \texttt{further\_vals}, corresponding to 2(g), and saved them into a new CSV
+file titled \texttt{data.csv} for analysis. After loading the data into \texttt{R},
+we used \texttt{mutate()} to create a new column with the calculated difference
+between the two conditions (\texttt{closer\_vals - further\_vals}), allowing us to examine
+how dopamine signals changed depending on vocal similarity.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUMMARIZE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,13 +93,125 @@ do to collect the data for Figure 2(g). Note that you only need the
   \item Summarize the further data. Do the data suggest that
    dopamine in the brains of young zebra finches decreases when
    they sing further away?
+   
+   <<size="scriptsize">>=
+    summarize.further <- dat.clean |>
+      summarize(
+        mean = mean(further_vals, na.rm=T),
+        sd = sd(further_vals, na.rm=T)
+      )
+    
+    (summarize.further)
+@
+
+  The further data show a mean percent change in fluorescence of $-0.20$ with a
+  standard deviation of 0.13, suggesting that dopamine levels tend to decrease 
+  when zebra finches sing notes that are further from their adult song. This
+  negative mean fluorescence change aligns with the hypothesis that imprecise
+  vocalizations lead to lower dopamine levels.
+  
    \item Summarize the closer data. Do the data suggest that
    dopamine in the brains of young zebra finches increases when
    they sing closer to their adult song?
+   
+  <<size="scriptsize">>=
+  summarize.closer <- dat.clean |>
+    summarize(
+      mean = mean(closer_vals, na.rm=T),
+      sd = sd(closer_vals, na.rm=T)
+    )
+
+  (summarize.closer)
+@
+
+The closer data have a mean change in fluorescence of 0.16 with a standard
+deviation of 0.09, indicating a consistent increase in dopamine when zebra finches
+produce more accurate vocalizations. This relatively low standard deviation also
+suggests this effect is robust across individuals.
+   
   \item Summarize the paired differences. Do the data suggest
   that there is a difference between dopamine in the brains of
   young zebra finches when they sing further away compared to 
   closer to their adult song?
+  
+  <<size="scriptsize">>=
+  summarize.differences <- dat.clean |>
+    summarize(
+      mean = mean(difference, na.rm=T),
+      sd = sd(difference, na.rm=T)
+    )
+  (summarize.differences)
+
+@
+
+  The paired differences between closer and further conditions show a mean
+  difference of 0.36 and a standard deviation of 0.21. The magnitude of this 
+  effect (0.36) relative to the variability (0.21) suggests a strong and meaningful
+  difference between the two conditions, potentially supporting the theory that
+  learning to sing is shaped by dopamine-driven reinforcement learning.
+  
+  The boxplot below in Figure \ref{datasummary} visually reinforces this trend, clearly showing that
+  fluorescence changes are consistently positive in the closer condition and consistently negative in
+  the further condition. The paired differences stand out as they are far above zero, capturing overall
+  increase in dopamine signaling. 
+
+<<plot1, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, size='scriptsize'>>=
+dat <- read.csv("data.csv")
+
+dat.clean <- dat |>
+  mutate(difference = closer_vals - further_vals)
+
+################################################################################
+# Question 3: summarize data
+################################################################################
+library(e1071)
+
+# summarize the further data
+summarize.further <- dat.clean |>
+  summarize(
+    mean = mean(further_vals, na.rm=T),
+    sd = sd(further_vals, na.rm=T)
+  )
+
+# summarize the closer data
+summarize.closer <- dat.clean |>
+  summarize(
+    mean = mean(closer_vals, na.rm=T),
+    sd = sd(closer_vals, na.rm=T)
+  )
+
+
+# summarize the differences
+summarize.differences <- dat.clean |>
+  summarize(
+    mean = mean(difference, na.rm=T),
+    sd = sd(difference, na.rm=T)
+  )
+
+dat.long <- dat.clean |>
+  pivot_longer(cols = everything(), names_to = "condition", values_to = "fluorescence")
+
+data.summary <- ggplot(data=dat.long, aes(x=condition, y=fluorescence)) +
+  geom_boxplot()+
+  theme_bw() +
+  geom_hline(yintercept = 0) + 
+  xlab("Condition") +
+  ylab("% Change in Fluorescence")
+
+data.summary
+
+@
+
+\begin{figure}[H]
+\begin{center}
+<<echo=FALSE, warning=FALSE, message=FALSE, fig.dim=c(2.5,1.75)>>=
+@
+\caption{$\%$ Change in Flourescence Across Conditions}
+\label{datasummary} %we can now reference plot1
+\end{center}
+\end{figure}
+
+
   \item \textbf{Optional Challenge:} Can you reproduce Figure 2(g)?
   Note that the you can use \texttt{geom\_errorbar()} to plot
   the range created by adding the mean $\pm$ one standard deviation.
@@ -79,8 +226,137 @@ like: ($t=23.99$, $p<0.0001$; $g=1.34$; 95\% CI: 4.43, 4.60).\\
 correction of their $p$-values. I'm waiting to hear back from them via email!
 \begin{enumerate}
   \item ``The close responses differed significantly from 0 ($p=1.63 \times 10^{-8}$).''
+  
+<<echo=TRUE, eval=TRUE, results="asis", message=FALSE, warning=FALSE, size='scriptsize'>>=
+library(effectsize)
+
+# close
+hedges_result_closer <- hedges_g(x = dat.clean$closer_vals, mu = 0, alternative = "greater")
+
+help("hedges_g")
+
+t_test_result_closer <- t.test(x=dat.clean$closer_vals, mu = 0, alternative = "greater")
+t_test_result_closer.ci <- t.test(x=dat.clean$closer_vals, mu = 0, alternative = "two.sided")
+
+t_stat_closer <- t_test_result_closer$statistic
+p_val_closer <- t_test_result_closer$p.value
+hedges_g_closer <- hedges_result_closer$Hedges_g
+ci_low_closer <- t_test_result_closer.ci$conf.int[1]
+ci_high_closer <- t_test_result_closer.ci$conf.int[2]
+
+results.closer <- data.frame(
+  t = c(t_stat_closer),
+  p_value = c(p_val_closer),
+  g = c(hedges_g_closer),
+  CI_Lower = c(ci_low_closer),
+  CI_Upper = c(ci_high_closer)
+)
+
+library(xtable)
+results.closer.xtable <- xtable(results.closer,
+                                caption="Closer Inferences")
+
+@
+<<echo=FALSE, eval=TRUE, results="asis">>=
+# placement="H" places table [H]ere, just like plot
+# include.rownames=FALSE doesn’t print the row numbers in this example
+print(results.closer.xtable,
+table.placement = "H", include.rownames=FALSE, size = "large")
+@
+
+The close responses differed significantly from zero ($t=8.30, p<0.0001; g=1.61;
+CI: 0.12, 0.20)$. This provides statistically discernable support that the mean
+percent change in fluorescence in response to close sounds is greater than zero, 
+indicating increased dopamine activity when a zebra finch sings in a way that
+more closely resembles the adult song. The large effect size ($g=1.61$) reflects
+a substantial difference in dopamine response, consistent with a strong reinforcement
+signal.
+  
   \item ``The far responses differed significantly from 0 ($p=5.17 \times 10^{-8}$).''
+  
+  <<echo=TRUE, eval=TRUE, results="asis", message=FALSE, warning=FALSE, size='scriptsize'>>=
+library(effectsize)
+
+hedges_result_further <- hedges_g(x = dat.clean$further_vals, mu = 0, alternative = "less")
+
+t_test_result_further <- t.test(x=dat.clean$further_vals, mu = 0, alternative = "less")
+t_test_result_further.ci <- t.test(x=dat.clean$further_vals, mu = 0, alternative = "two.sided")
+
+t_stat_further <- t_test_result_further$statistic
+p_val_further <- t_test_result_further$p.value
+hedges_g_further <- hedges_result_further$Hedges_g
+ci_low_further <- t_test_result_further.ci$conf.int[1]
+ci_high_further <- t_test_result_further.ci$conf.int[2]
+
+results.further <- data.frame(
+  t = c(t_stat_further),
+  p_value = c(p_val_further),
+  g = c(hedges_g_further),
+  CI_Lower = c(ci_low_further),
+  CI_Upper = c(ci_high_further)
+)
+
+library(xtable)
+results.further.xtable <- xtable(results.further,
+                                 caption="Further Inferences")
+
+
+@
+<<echo=FALSE, eval=TRUE, results="asis">>=
+# placement="H" places table [H]ere, just like plot
+# include.rownames=FALSE doesn’t print the row numbers in this example
+print(results.further.xtable,
+table.placement = "H", include.rownames=FALSE, size = "large")
+@
+
+The far responses were significantly less than zero ($t=-7.78, p<0.0001; g=-1.51;
+CI: -0.26, -0.15)$. This provides statistically discernable support that the mean
+percent change in fluorescence in response to far sounds is less than zero, meaning
+dopamine activity tends to decrease when the bird sings songs further from the target
+sound. The large negative effect size ($g=-1.51$) highlights that this difference is
+large, indicating the idea that less successful vocal attempts are met with dopamine
+suppression.
+  
   \item ``The difference between populations was significant ($p=1.04 \times10^{-8}$).''
+  
+  <<echo=TRUE, eval=TRUE, results="asis", message=FALSE, warning=FALSE, size='scriptsize'>>=
+# differences
+hedges_result_difference <- hedges_g(x = dat.clean$difference, mu = 0, alternative = "two.sided")
+
+t_test_result_difference <- t.test(x=dat.clean$difference, mu = 0, alternative = "two.sided")
+
+t_stat_difference <- t_test_result_difference$statistic
+p_val_difference <- t_test_result_difference$p.value
+hedges_g_difference <- hedges_result_difference$Hedges_g
+ci_low_difference <- t_test_result_difference$conf.int[1]
+ci_high_difference <- t_test_result_difference$conf.int[2]
+
+results.difference <- data.frame(
+  t = c(t_stat_difference),
+  p_value = c(p_val_difference),
+  g = c(hedges_g_difference),
+  CI_Lower = c(ci_low_difference),
+  CI_Upper = c(ci_high_difference)
+)
+
+library(xtable)
+results.difference.xtable <- xtable(results.difference,
+                                    caption="Difference Inferences")
+@  
+
+<<echo=FALSE, eval=TRUE, results="asis">>=
+# placement="H" places table [H]ere, just like plot
+# include.rownames=FALSE doesn’t print the row numbers in this example
+print(results.difference.xtable,
+table.placement = "H", include.rownames=FALSE, size = "large")
+@
+
+The difference between populations was also significant ($t=8.51, p<0.0001; g=1.65; CI: 0.27, 0.45$). This indicates a statistically discernable difference in dopamine-associated
+fluorescence between close and far vocalizations, with stronger responses for more
+accurate song attempts. The large effect size again underscores that dopamine encodes
+the degree of vocal accuracy, supporting the interpretation that zebra finches
+learn to sing via a reinforcement mechanism.
+  
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CONDUCT THE TESTS
@@ -89,8 +365,366 @@ correction of their $p$-values. I'm waiting to hear back from them via email!
 hypothesis testing plots for each part of the previous question.
 \begin{enumerate}
   \item Question 4, part(a).
+  
+<<size='scriptsize'>>=
+# part a: question 4, part(a)
+mu0 <- 0
+x <- dat.clean$closer_vals
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+any(is.na(x)) # no missing data
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+
+# For plotting the null distribution
+ggdat.t <- tibble(t=seq(-5,5,length.out=1000))|>
+  mutate(pdf.null = dt(t, df=n-1))
+# For plotting the observed point
+ggdat.obs <- tibble(t    = t.stat, 
+                    y    = 0) # to plot on x-axis
+
+# Resampling to approximate the sampling distribution 
+# on the data
+R <- 1000
+resamples <- tibble(t=numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x=x,
+                        size=n,
+                        replace=T)
+  resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
+              0, 
+              qt(0.975, df = n-1), 5,  # rejection region (right)
+              t.stat)                  # t-statistic observed
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+# Create Plot
+close.hypothesis.plot <- ggplot() +
+  # null distribution
+  geom_line(data=ggdat.t, 
+            aes(x=t, y=pdf.null))+
+  geom_hline(yintercept=0)+
+  # rejection regions
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  # plot p-value (not visible)
+  geom_ribbon(data=subset(ggdat.t, t>=t.stat), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.25)+
+  # plot observation point
+  geom_point(data=ggdat.obs, aes(x=t, y=y), color="red")+
+  # Resampling Distribution
+  stat_density(data=resamples, 
+               aes(x=t),
+               geom="line", color="grey")+
+  # clean up aesthetics
+  theme_bw()+
+  scale_x_continuous("t",
+                     breaks = round(t.breaks,2),
+                     sec.axis = sec_axis(~.,
+                                         name = bquote(bar(x)),
+                                         breaks = t.breaks,
+                                         labels = round(xbar.breaks,2)))+
+  ylab("Density")+
+  ggtitle("T-Test for Closer Responses",
+          subtitle=bquote(H[0]==0*";"~H[a]>0))
+
+@
+
+Figure \ref{closehypothesis} below shows the null distribution for the t-statistic
+under the hypothesis that the mean percent change in fluorescence in response to
+close sounds is zero. The null hypothesis, $H_0: \mu = 0$, represents no average
+dopamine response when the zebra finch sings in a way that closely matches the
+adult song. The alternative hypothesis, $H_a: \mu > 0$, reflects the researchers
+prediction that dopamine levels increase in response to these more accurate vocalizations.
+The grey shaded regions at both tails mark the $5\%$ two-tailed rejection region, while
+the red point marks the observed t-statistic, $t=8.30$, which lies far into the 
+right tail. The lighter shaded region represents the p-value - the area under the
+null distribution to the right of the observed t. The p value is effectively 0, providing
+statistically discernable support that the mean percent change in fluorescence is greater
+than zero. This confirms that singing closer to the adult song triggers a significant
+dopamine increase. The resampling distribution, overlaid in light grey, confirms the
+right-skewed location of the observed statistic relative to the null.
+
+<<plot2, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, size='scriptsize'>>=
+# part a: question 4, part(a)
+mu0 <- 0
+x <- dat.clean$closer_vals
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+
+# For plotting the null distribution
+ggdat.t <- tibble(t=seq(-5,5,length.out=1000))|>
+  mutate(pdf.null = dt(t, df=n-1))
+# For plotting the observed point
+ggdat.obs <- tibble(t    = t.stat, 
+                    y    = 0) # to plot on x-axis
+
+# Resampling to approximate the sampling distribution 
+# on the data
+R <- 1000
+resamples <- tibble(t=numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x=x,
+                        size=n,
+                        replace=T)
+  resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
+              0, 
+              qt(0.975, df = n-1), 5,  # rejection region (right)
+              t.stat)                  # t-statistic observed
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+# Create Plot
+close.hypothesis.plot <- ggplot() +
+  # null distribution
+  geom_line(data=ggdat.t, 
+            aes(x=t, y=pdf.null))+
+  geom_hline(yintercept=0)+
+  # rejection regions
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  # plot p-value (not visible)
+  geom_ribbon(data=subset(ggdat.t, t>=t.stat), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.25)+
+  # plot observation point
+  geom_point(data=ggdat.obs, aes(x=t, y=y), color="red")+
+  # Resampling Distribution
+  stat_density(data=resamples, 
+               aes(x=t),
+               geom="line", color="grey")+
+  # clean up aesthetics
+  theme_bw()+
+  scale_x_continuous("t",
+                     breaks = round(t.breaks,2),
+                     sec.axis = sec_axis(~.,
+                                         name = bquote(bar(x)),
+                                         breaks = t.breaks,
+                                         labels = round(xbar.breaks,2)))+
+  ylab("Density")+
+  ggtitle("T-Test for Closer Responses",
+          subtitle=bquote(H[0]==0*";"~H[a]>0))
+
+close.hypothesis.plot
+
+@
+
+\begin{figure}[H]
+\begin{center}
+<<echo=FALSE, warning=FALSE, message=FALSE, fig.dim=c(2.5,1.75)>>=
+@
+\caption{Hypothesis Test Plot for Close Responses}
+\label{closehypothesis} %we can now reference plot1
+\end{center}
+\end{figure}
+  
   \item Question 4, part(b).
+  
+  Figure \ref{furtherhypothesis} tests whether dopamine levels significantly decrease
+  when zebra finches sing in a way that diverges from the adult song. The hypotheses
+  are $H_0: \mu = 0$ and $H_a: \mu < 0$. Here, the observed t-statistic is $t=-7.78$,
+  marked by the red point on the left tail of the null distribution. The left rejection
+  region and p-value area are both shaded to emphasize the extremity of the observed
+  statistic. The p-value is again extremely small as you can see by where the red dot is
+  located in relation to the tail. This result is consistent with a strong decrease
+  in dopamine activity when vocalizations are less accurate, reinforcing the idea of 
+  negative reinforcement. The resampling distribution confirms the leftward shift
+  and supports the conclusion that the observed t-statistic is unlikely under the null.
+  
+  <<plot3, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, size='scriptsize'>>=
+# part b: question 4, part(b)
+mu0 <- 0
+x <- dat.clean$further_vals
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+
+# For plotting the null distribution
+ggdat.t <- tibble(t=seq(-5,5,length.out=1000))|>
+  mutate(pdf.null = dt(t, df=n-1))
+# For plotting the observed point
+ggdat.obs <- tibble(t    = t.stat, 
+                    y    = 0) # to plot on x-axis
+
+# Resampling to approximate the sampling distribution 
+# on the data
+R <- 1000
+resamples <- tibble(t=numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x=x,
+                        size=n,
+                        replace=T)
+  resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
+              0, 
+              qt(0.975, df = n-1), 5,  # rejection region (right)
+              t.stat)                  # t-statistic observed
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+# Create Plot
+further.hypothesis.plot <- ggplot() +
+  # null distribution
+  geom_line(data=ggdat.t, 
+            aes(x=t, y=pdf.null))+
+  geom_hline(yintercept=0)+
+  # rejection regions
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  # plot p-value (not visible)
+  geom_ribbon(data=subset(ggdat.t, t>=t.stat), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.25)+
+  # plot observation point
+  geom_point(data=ggdat.obs, aes(x=t, y=y), color="red")+
+  # Resampling Distribution
+  stat_density(data=resamples, 
+               aes(x=t),
+               geom="line", color="grey")+
+  # clean up aesthetics
+  theme_bw()+
+  scale_x_continuous("t",
+                     breaks = round(t.breaks,2),
+                     sec.axis = sec_axis(~.,
+                                         name = bquote(bar(x)),
+                                         breaks = t.breaks,
+                                         labels = round(xbar.breaks,2)))+
+  ylab("Density")+
+  ggtitle("T-Test for Further Responses",
+          subtitle=bquote(H[0]==0*";"~H[a]<0))
+
+further.hypothesis.plot
+  @
+  
+  \begin{figure}[H]
+\begin{center}
+<<echo=FALSE, warning=FALSE, message=FALSE, fig.dim=c(2.5,1.75)>>=
+@
+\caption{Hypothesis Test Plot for Far Responses}
+\label{furtherhypothesis} %we can now reference plot1
+\end{center}
+\end{figure}
+  
+  
   \item Question 4, part(c).
+  
+  Figure \ref{differencehypothesis} compares dopamine responses directly between
+  close and far vocalizations, testing the hypothesis $H_0: \mu = 0$ versus
+  $H_a: \mu \neq 0$. The null distribution assumes no difference in percent
+  fluorescence change between the two conditions. The observed t-statistic falls
+  significantly to the right, $t=8.51$, indicating that dopamine responses are 
+  markedly stronger when the zebra finches produce closer approximations to the
+  adult song. The p-value is again essentially zero, supporting a statistically
+  discernable difference between close and far responses. This plot emphasizes
+  that dopamine not only increases during accurate vocalizations but does so
+  significantly more than during inaccurate ones-- further reinforcing its role
+  as a reinforcement signal during song learning.
+  
+    <<plot4, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE, size='scriptsize'>>=
+mu0 <- 0
+x <- dat.clean$difference
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+
+# For plotting the null distribution
+ggdat.t <- tibble(t=seq(-5,5,length.out=1000))|>
+  mutate(pdf.null = dt(t, df=n-1))
+# For plotting the observed point
+ggdat.obs <- tibble(t    = t.stat, 
+                    y    = 0) # to plot on x-axis
+
+# Resampling to approximate the sampling distribution 
+# on the data
+R <- 1000
+resamples <- tibble(t=numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x=x,
+                        size=n,
+                        replace=T)
+  resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
+              0, 
+              qt(0.975, df = n-1), 5,  # rejection region (right)
+              t.stat)                  # t-statistic observed
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+# Create Plot
+difference.hypothesis.plot <- ggplot() +
+  # null distribution
+  geom_line(data=ggdat.t, 
+            aes(x=t, y=pdf.null))+
+  geom_hline(yintercept=0)+
+  # rejection regions
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="grey", alpha=0.5)+
+  # plot p-value (not visible)
+  geom_ribbon(data=subset(ggdat.t, t>=t.stat), 
+              aes(x=t, ymin=0, ymax=pdf.null),
+              fill="red", alpha=0.25)+
+  # plot observation point
+  geom_point(data=ggdat.obs, aes(x=t, y=y), color="red")+
+  # Resampling Distribution
+  stat_density(data=resamples, 
+               aes(x=t),
+               geom="line", color="grey")+
+  # clean up aesthetics
+  theme_bw()+
+  scale_x_continuous("t",
+                     breaks = round(t.breaks,2),
+                     sec.axis = sec_axis(~.,
+                                         name = bquote(bar(x)),
+                                         breaks = t.breaks,
+                                         labels = round(xbar.breaks,2)))+
+  ylab("Density")+
+  ggtitle("T-Test for Difference of Responses",
+          subtitle=bquote(H[0]==0*";"~H[a]!=0))
+
+difference.hypothesis.plot
+@
+
+  \begin{figure}[H]
+\begin{center}
+<<echo=FALSE, warning=FALSE, message=FALSE, fig.dim=c(2.5,1.75)>>=
+@
+\caption{Hypothesis Test Plot for Difference Between Populations}
+\label{differencehypothesis} %we can now reference plot1
+\end{center}
+\end{figure}
+  
+  
 \end{enumerate}
 \end{enumerate}
 
