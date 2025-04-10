@@ -326,7 +326,7 @@ correction of their $p$-values. I'm waiting to hear back from them via email!
 \end{alltt}
 \end{kframe}
 % latex table generated in R 4.4.2 by xtable 1.8-4 package
-% Tue Apr  8 22:36:13 2025
+% Wed Apr  9 21:21:02 2025
 \begin{table}[H]
 \centering
 \begingroup\large
@@ -381,7 +381,7 @@ signal.
 \end{alltt}
 \end{kframe}
 % latex table generated in R 4.4.2 by xtable 1.8-4 package
-% Tue Apr  8 22:36:13 2025
+% Wed Apr  9 21:21:02 2025
 \begin{table}[H]
 \centering
 \begingroup\large
@@ -435,7 +435,7 @@ suppression.
 \end{kframe}
 
 % latex table generated in R 4.4.2 by xtable 1.8-4 package
-% Tue Apr  8 22:36:13 2025
+% Wed Apr  9 21:21:02 2025
 \begin{table}[H]
 \centering
 \begingroup\large
@@ -502,10 +502,7 @@ hypothesis testing plots for each part of the previous question.
   \hldef{resamples}\hlopt{$}\hldef{t[i]} \hlkwb{=} \hldef{(}\hlkwd{mean}\hldef{(curr.sample)}\hlopt{-}\hldef{mu0)}\hlopt{/}\hldef{(}\hlkwd{sd}\hldef{(curr.sample)}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
 \hldef{\}}
 
-\hldef{t.breaks} \hlkwb{<-} \hlkwd{c}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n}\hlopt{-}\hlnum{1}\hldef{),} \hlcom{# rejection region (left)}
-              \hlnum{0}\hldef{,}
-              \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n}\hlopt{-}\hlnum{1}\hldef{),} \hlnum{5}\hldef{,}  \hlcom{# rejection region (right)}
-              \hldef{t.stat)}                  \hlcom{# t-statistic observed}
+\hldef{t.breaks} \hlkwb{<-} \hlkwd{c}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlnum{0}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.95}\hldef{,} \hlkwc{df} \hldef{= n}\hlopt{-}\hlnum{1}\hldef{),} \hlnum{5}\hldef{, t.stat)}
 \hldef{xbar.breaks} \hlkwb{<-} \hldef{t.breaks} \hlopt{*} \hldef{s}\hlopt{/}\hldef{(}\hlkwd{sqrt}\hldef{(n))} \hlopt{+} \hldef{mu0}
 
 \hlcom{# Create Plot}
@@ -515,10 +512,7 @@ hypothesis testing plots for each part of the previous question.
             \hlkwd{aes}\hldef{(}\hlkwc{x}\hldef{=t,} \hlkwc{y}\hldef{=pdf.null))}\hlopt{+}
   \hlkwd{geom_hline}\hldef{(}\hlkwc{yintercept}\hldef{=}\hlnum{0}\hldef{)}\hlopt{+}
   \hlcom{# rejection regions}
-  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data}\hldef{=}\hlkwd{subset}\hldef{(ggdat.t, t}\hlopt{<=}\hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df}\hldef{=n}\hlopt{-}\hlnum{1}\hldef{)),}
-              \hlkwd{aes}\hldef{(}\hlkwc{x}\hldef{=t,} \hlkwc{ymin}\hldef{=}\hlnum{0}\hldef{,} \hlkwc{ymax}\hldef{=pdf.null),}
-              \hlkwc{fill}\hldef{=}\hlsng{"grey"}\hldef{,} \hlkwc{alpha}\hldef{=}\hlnum{0.5}\hldef{)}\hlopt{+}
-  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data}\hldef{=}\hlkwd{subset}\hldef{(ggdat.t, t}\hlopt{>=}\hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df}\hldef{=n}\hlopt{-}\hlnum{1}\hldef{)),}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data}\hldef{=}\hlkwd{subset}\hldef{(ggdat.t, t}\hlopt{<=}\hlkwd{qt}\hldef{(}\hlnum{0.95}\hldef{,} \hlkwc{df}\hldef{=n}\hlopt{-}\hlnum{1}\hldef{)),}
               \hlkwd{aes}\hldef{(}\hlkwc{x}\hldef{=t,} \hlkwc{ymin}\hldef{=}\hlnum{0}\hldef{,} \hlkwc{ymax}\hldef{=pdf.null),}
               \hlkwc{fill}\hldef{=}\hlsng{"grey"}\hldef{,} \hlkwc{alpha}\hldef{=}\hlnum{0.5}\hldef{)}\hlopt{+}
   \hlcom{# plot p-value (not visible)}
@@ -552,10 +546,9 @@ close sounds is zero. The null hypothesis, $H_0: \mu = 0$, represents no average
 dopamine response when the zebra finch sings in a way that closely matches the
 adult song. The alternative hypothesis, $H_a: \mu > 0$, reflects the researchers
 prediction that dopamine levels increase in response to these more accurate vocalizations.
-The grey shaded regions at both tails mark the $5\%$ two-tailed rejection region, while
+The unshaded shaded region in the right tail marks the $5\%$ rejection region, while
 the red point marks the observed t-statistic, $t=8.30$, which lies far into the 
-right tail. The lighter shaded region represents the p-value - the area under the
-null distribution to the right of the observed t. The p value is effectively 0, providing
+right tail. The p value is effectively 0, providing
 statistically discernable support that the mean percent change in fluorescence is greater
 than zero. This confirms that singing closer to the adult song triggers a significant
 dopamine increase. The resampling distribution, overlaid in light grey, confirms the
@@ -579,8 +572,8 @@ right-skewed location of the observed statistic relative to the null.
   Figure \ref{furtherhypothesis} tests whether dopamine levels significantly decrease
   when zebra finches sing in a way that diverges from the adult song. The hypotheses
   are $H_0: \mu = 0$ and $H_a: \mu < 0$. Here, the observed t-statistic is $t=-7.78$,
-  marked by the red point on the left tail of the null distribution. The left rejection
-  region and p-value area are both shaded to emphasize the extremity of the observed
+  marked by the red point on the left tail of the null distribution. The rejection
+  region (grey) and p-value area are both shaded to emphasize the extremity of the observed
   statistic. The p-value is again extremely small as you can see by where the red dot is
   located in relation to the tail. This result is consistent with a strong decrease
   in dopamine activity when vocalizations are less accurate, reinforcing the idea of 

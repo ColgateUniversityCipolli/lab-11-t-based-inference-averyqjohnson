@@ -395,10 +395,7 @@ for(i in 1:R){
   resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
 }
 
-t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
-              0, 
-              qt(0.975, df = n-1), 5,  # rejection region (right)
-              t.stat)                  # t-statistic observed
+t.breaks <- c(-5, 0, qt(0.95, df = n-1), 5, t.stat)
 xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
 
 # Create Plot
@@ -408,10 +405,7 @@ close.hypothesis.plot <- ggplot() +
             aes(x=t, y=pdf.null))+
   geom_hline(yintercept=0)+
   # rejection regions
-  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
-              aes(x=t, ymin=0, ymax=pdf.null),
-              fill="grey", alpha=0.5)+
-  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.95, df=n-1)), 
               aes(x=t, ymin=0, ymax=pdf.null),
               fill="grey", alpha=0.5)+
   # plot p-value (not visible)
@@ -444,10 +438,9 @@ close sounds is zero. The null hypothesis, $H_0: \mu = 0$, represents no average
 dopamine response when the zebra finch sings in a way that closely matches the
 adult song. The alternative hypothesis, $H_a: \mu > 0$, reflects the researchers
 prediction that dopamine levels increase in response to these more accurate vocalizations.
-The grey shaded regions at both tails mark the $5\%$ two-tailed rejection region, while
+The unshaded shaded region in the right tail marks the $5\%$ rejection region, while
 the red point marks the observed t-statistic, $t=8.30$, which lies far into the 
-right tail. The lighter shaded region represents the p-value - the area under the
-null distribution to the right of the observed t. The p value is effectively 0, providing
+right tail. The p value is effectively 0, providing
 statistically discernable support that the mean percent change in fluorescence is greater
 than zero. This confirms that singing closer to the adult song triggers a significant
 dopamine increase. The resampling distribution, overlaid in light grey, confirms the
@@ -481,10 +474,8 @@ for(i in 1:R){
   resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
 }
 
-t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
-              0, 
-              qt(0.975, df = n-1), 5,  # rejection region (right)
-              t.stat)                  # t-statistic observed
+t.breaks <- c(-5, 0, qt(0.95, df = n-1), 5, t.stat)
+
 xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
 
 # Create Plot
@@ -494,10 +485,7 @@ close.hypothesis.plot <- ggplot() +
             aes(x=t, y=pdf.null))+
   geom_hline(yintercept=0)+
   # rejection regions
-  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
-              aes(x=t, ymin=0, ymax=pdf.null),
-              fill="grey", alpha=0.5)+
-  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.95, df=n-1)), 
               aes(x=t, ymin=0, ymax=pdf.null),
               fill="grey", alpha=0.5)+
   # plot p-value (not visible)
@@ -540,8 +528,8 @@ close.hypothesis.plot
   Figure \ref{furtherhypothesis} tests whether dopamine levels significantly decrease
   when zebra finches sing in a way that diverges from the adult song. The hypotheses
   are $H_0: \mu = 0$ and $H_a: \mu < 0$. Here, the observed t-statistic is $t=-7.78$,
-  marked by the red point on the left tail of the null distribution. The left rejection
-  region and p-value area are both shaded to emphasize the extremity of the observed
+  marked by the red point on the left tail of the null distribution. The rejection
+  region (grey) and p-value area are both shaded to emphasize the extremity of the observed
   statistic. The p-value is again extremely small as you can see by where the red dot is
   located in relation to the tail. This result is consistent with a strong decrease
   in dopamine activity when vocalizations are less accurate, reinforcing the idea of 
@@ -576,10 +564,8 @@ for(i in 1:R){
   resamples$t[i] = (mean(curr.sample)-mu0)/(sd(curr.sample)/sqrt(n))
 }
 
-t.breaks <- c(-5, qt(0.025, df = n-1), # rejection region (left)
-              0, 
-              qt(0.975, df = n-1), 5,  # rejection region (right)
-              t.stat)                  # t-statistic observed
+t.breaks <- c(-5, 0, qt(0.05, df = n-1), 5, t.stat)
+
 xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
 
 # Create Plot
@@ -589,14 +575,11 @@ further.hypothesis.plot <- ggplot() +
             aes(x=t, y=pdf.null))+
   geom_hline(yintercept=0)+
   # rejection regions
-  geom_ribbon(data=subset(ggdat.t, t<=qt(0.025, df=n-1)), 
-              aes(x=t, ymin=0, ymax=pdf.null),
-              fill="grey", alpha=0.5)+
-  geom_ribbon(data=subset(ggdat.t, t>=qt(0.975, df=n-1)), 
+  geom_ribbon(data=subset(ggdat.t, t<=qt(0.05, df=n-1)), 
               aes(x=t, ymin=0, ymax=pdf.null),
               fill="grey", alpha=0.5)+
   # plot p-value (not visible)
-  geom_ribbon(data=subset(ggdat.t, t>=t.stat), 
+  geom_ribbon(data=subset(ggdat.t, t<=t.stat), 
               aes(x=t, ymin=0, ymax=pdf.null),
               fill="grey", alpha=0.25)+
   # plot observation point
